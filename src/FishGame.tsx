@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 const FishGame: React.FC = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const [score, setScore] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
 
   useEffect(() => {
     const config: Phaser.Types.Core.GameConfig = {
@@ -42,25 +43,21 @@ const FishGame: React.FC = () => {
       this.load.image('bullet', '/fishgame/bullet.png');
       this.load.audio('shoot', '/sounds/shoot.wav');
       this.load.audio('hit', '/sounds/hit.wav');
-
       fishTypes.forEach(f => this.load.image(f.key, `/fishgame/${f.key}.png`));
     }
 
     function spawnFish(this: Phaser.Scene) {
       const chosen = Phaser.Math.RND.pick(fishTypes);
-
       fish = this.physics.add.image(
         Phaser.Math.Between(50, 750),
         Phaser.Math.Between(50, 500),
         chosen.key
       );
-
       fish.setData('value', chosen.value);
       fish.setVelocity(chosen.speed, chosen.speed / 2);
       fish.setCollideWorldBounds(true);
       fish.setBounce(1);
 
-      // 🐟 Wiggle animation using tween
       this.tweens.add({
         targets: fish,
         angle: { from: -10, to: 10 },
@@ -89,7 +86,8 @@ const FishGame: React.FC = () => {
         this.physics.add.overlap(bullet, fish, () => {
           bullet.destroy();
           hitSound.play();
-          setScore(prev => prev + (fish.getData('value') || 0));
+          const baseValue = fish.getData('value') || 0;
+          setScore(prev => prev + baseValue * multiplier);
           fish.destroy();
           spawnFish.call(this);
         });
@@ -101,17 +99,30 @@ const FishGame: React.FC = () => {
     return () => {
       game.destroy(true);
     };
-  }, []);
+  }, [multiplier]);
 
   return (
     <div className="relative w-full h-full">
       <div ref={gameRef} className="w-full h-full" />
+
       <div
         className="absolute top-2 left-2 text-white text-xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded"
         style={{ zIndex: 10 }}
       >
         Coins: {score}
       </div>
+
+      <button
+        className="absolute top-2 right-2 bg-yellow-400 text-black px-4 py-2 rounded shadow font-bold"
+        style={{ zIndex: 10 }}
+        onClick={() => {
+          if (multiplier > 1) return;
+          setMultiplier(2);
+          setTimeout(() => setMultiplier(1), 10000);
+        }}
+      >
+        {multiplier > 1 ? '2X Active' : '2X Coins'}
+      </button>
     </div>
   );
 };
