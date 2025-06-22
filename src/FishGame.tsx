@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 
@@ -30,15 +29,22 @@ const FishGame: React.FC = () => {
 
     let fish: Phaser.Physics.Arcade.Image;
     let bulletGroup: Phaser.Physics.Arcade.Group;
+    let shootSound: Phaser.Sound.BaseSound;
+    let hitSound: Phaser.Sound.BaseSound;
 
     function preload(this: Phaser.Scene) {
       this.load.image('bg', '/fishgame/bg.png');
       this.load.image('fish', '/fishgame/fish.png');
       this.load.image('bullet', '/fishgame/bullet.png');
+      this.load.audio('shoot', '/sounds/shoot.wav');
+      this.load.audio('hit', '/sounds/hit.wav');
     }
 
     function create(this: Phaser.Scene) {
       this.add.image(400, 300, 'bg');
+
+      shootSound = this.sound.add('shoot');
+      hitSound = this.sound.add('hit');
 
       fish = this.physics.add.image(100, 100, 'fish');
       fish.setVelocity(100, 40);
@@ -51,10 +57,12 @@ const FishGame: React.FC = () => {
         const bullet = this.physics.add.image(400, 560, 'bullet');
         this.physics.moveTo(bullet, pointer.x, pointer.y, 400);
         bulletGroup.add(bullet);
+        shootSound.play();
 
         this.physics.add.overlap(bullet, fish, () => {
           bullet.destroy();
           fish.destroy();
+          hitSound.play();
           setScore(prev => prev + 10);
 
           fish = this.physics.add.image(
