@@ -1,3 +1,4 @@
+import React from 'react';
 import FishGame from './FishGame';
 import PurchasePage from './PurchasePage';
 
